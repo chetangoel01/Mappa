@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snap to Roads Demo</title>
+  <meta charset="utf-8" />
+  <style>
+    #map { height: 70vh; width: 100%; }
+    body { font-family: sans-serif; padding: 10px; }
+    button { margin-top: 10px; margin-right: 10px; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 13px; }
+  </style>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  />
+</head>
+<body>
+  <h2>Draw Route → Snap to Roads</h2>
+  <div id="map"></div>
+  <button onclick="sendToSnap()">Snap This Route</button>
+  <button onclick="reset()">Clear</button>
+
+  <h3>Original Geometry</h3>
+  <pre id="originalText">[]</pre>
+
+  <h3>Snapped Route</h3>
+  <pre id="snappedText">[]</pre>
+
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([52.52, 13.405], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let drawnCoords = [];
+    let drawLayer = L.polyline([], { color: 'black' }).addTo(map);
+    let snappedLayer = null;
+
+    const originalText = document.getElementById("originalText");
+    const snappedText = document.getElementById("snappedText");
+
+    map.on('click', (e) => {
+      const { lat, lng } = e.latlng;
+      drawnCoords.push([lat, lng]);
+      drawLayer.setLatLngs(drawnCoords);
+      originalText.textContent = JSON.stringify(drawnCoords, null, 2);
+    });
+
+    async function sendToSnap() {
+      if (drawnCoords.length < 2) {
+        alert("Draw at least 2 points.");
+        return;
+      }
+
+      const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1MDc4Mjg3OSwianRpIjoiMmE4YzQxNTAtOThlYS00MzE1LTk1ZGQtODJkNjVjZjUyZTY0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MywibmJmIjoxNzUwNzgyODc5LCJjc3JmIjoiMWI1N2ZkZWQtODY3MS00NjYwLWFhNDgtMmZjZDNlNTIxYjRlIiwiZXhwIjoxNzUwNzgzNzc5fQ.eIapRsVCntD65HY0DDDvpp4nbY2UKUUAlX7_R0spsbw'; // 🔑 Replace this with a valid token
+
+      const geoCoords = drawnCoords.map(([lat, lng]) => [lng, lat]);
+
+      try {
+        const res = await fetch('http://localhost:5055/shape', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({
+            geometry: geoCoords,
+            mode: 'foot-walking'
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Snap failed');
+
+        const snapped = data.snapped.map(([lng, lat]) => [lat, lng]);
+        if (snappedLayer) map.removeLayer(snappedLayer);
+        snappedLayer = L.polyline(snapped, { color: 'blue' }).addTo(map);
+        map.fitBounds(snappedLayer.getBounds());
+
+        snappedText.textContent = JSON.stringify(snapped, null, 2);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    function reset() {
+      drawnCoords = [];
+      drawLayer.setLatLngs([]);
+      if (snappedLayer) {
+        map.removeLayer(snappedLayer);
+        snappedLayer = null;
+      }
+      originalText.textContent = "[]";
+      snappedText.textContent = "[]";
+    }
+  </script>
+</body>
+</html>

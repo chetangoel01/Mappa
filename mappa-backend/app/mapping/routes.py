@@ -2,8 +2,9 @@ import os
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 import requests
-from .. import db
-from ..models import ShapeRoute
+# from .. import db
+# from ..models import ShapeRoute
+from .. import supabase
 
 mapping_bp = Blueprint('mapping', __name__)
 
@@ -59,9 +60,7 @@ def map_shape():
     try:
         data = request.get_json()
         user_id = get_jwt_identity()
-
         mode = data.get('mode', 'foot-walking')
-
         if 'geometry' in data:
             coords = data['geometry']
             if not isinstance(coords, list) or not all(isinstance(c, list) and len(c) == 2 for c in coords):
@@ -75,42 +74,42 @@ def map_shape():
             return jsonify({
                 "error": "Provide either 'geometry' (list of coordinates) or both 'start' and 'shape'"
             }), 400
-
         snapped = snap_to_roads_ors(coords, mode)
-
-        # Save to DB (disabled for testing)
-        # shape = ShapeRoute(
-        #     user_id=user_id,
-        #     original_shape=coords,
-        #     snapped_route=snapped,
-        #     mode=mode
-        # )
-        # db.session.add(shape)
-        # db.session.commit()
-
+        shape = {
+            "user_id": user_id,
+            "original_shape": coords,
+            "snapped_route": snapped,
+            "mode": mode
+        }
+        try:
+            supabase.table('ShapeRoute').insert(shape).execute()
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
         return jsonify({
-            "msg": "Route snapped successfully (not saved)",
+            "msg": "Route snapped and saved successfully",
             "snapped": snapped
         }), 200
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 @mapping_bp.route('/shapes', methods=['GET'])
 @jwt_required()
 def get_shapes():
     try:
         user_id = get_jwt_identity()
-        shapes = ShapeRoute.query.filter_by(user_id=user_id).all()
+        try:
+            res = supabase.table('ShapeRoute').select('*').eq('user_id', user_id).execute()
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+        shapes = res.data
         return jsonify({
             "shapes": [
                 {
-                    "id": s.id,
-                    "original_shape": s.original_shape,
-                    "snapped_route": s.snapped_route,
-                    "mode": s.mode,
-                    "created_at": s.created_at.isoformat()
+                    "id": s['id'],
+                    "original_shape": s['original_shape'],
+                    "snapped_route": s['snapped_route'],
+                    "mode": s['mode'],
+                    "created_at": s.get('created_at')
                 } for s in shapes
             ]
         }), 200

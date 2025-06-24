@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import User
-from .. import db
+from .. import supabase
 
 user_bp = Blueprint('users', __name__)
 
@@ -9,11 +8,18 @@ user_bp = Blueprint('users', __name__)
 @jwt_required()
 def user_settings():
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-
     if request.method == 'POST':
-        user.settings = request.json
-        db.session.commit()
+        settings = request.json
+        try:
+            supabase.table('User').update({"settings": settings}).eq('id', user_id).execute()
+        except Exception as e:
+            return jsonify({"msg": "Failed to update settings.", "error": str(e)}), 500
         return jsonify({"msg": "Settings updated."})
-
-    return jsonify(user.settings or {})
+    # GET
+    try:
+        res = supabase.table('User').select('settings').eq('id', user_id).execute()
+    except Exception as e:
+        return jsonify({}), 404
+    if not res.data:
+        return jsonify({}), 404
+    return jsonify(res.data[0]['settings'] or {})

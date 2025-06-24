@@ -115,3 +115,43 @@ def get_shapes():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@mapping_bp.route('/shape-from-location', methods=['POST'])
+@jwt_required()
+def shape_from_location():
+    try:
+        data = request.get_json()
+        user_id = get_jwt_identity()
+
+        start = data.get('start')  # [lat, lng]
+        if not start:
+            return jsonify({"error": "Missing 'start' (user's current location)"}), 400
+
+        shape_type = data.get('shape', 'square')
+        distance = data.get('distance', 1000)  # default 1000 meters
+        mode = data.get('mode', 'foot-walking')
+
+        # Generate shape
+        shape_coords = generate_shape(shape_type, start, distance)
+        snapped = snap_to_roads_ors(shape_coords, mode)
+
+        # Save shape
+        shape = {
+            "user_id": user_id,
+            "original_shape": shape_coords,
+            "snapped_route": snapped,
+            "mode": mode
+        }
+        try:
+            supabase.table('ShapeRoute').insert(shape).execute()
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+        return jsonify({
+            "msg": "Route snapped successfully from location and shape",
+            "original_shape": shape_coords,
+            "snapped": snapped
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

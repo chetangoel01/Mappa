@@ -1,44 +1,12 @@
-version: '3.9'
-
 services:
   web:
     build:
       context: .
     ports:
       - "5055:5000"
-    env_file:
-      - .env
-    depends_on:
-      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:***REMOVED***@db.ijkwprygjsbokfkclciv.supabase.co:5432/postgres
+      JWT_SECRET_KEY: ***REMOVED***
     volumes:
       - .:/app
     command: flask run --host=0.0.0.0 --reload
-
-  db:
-    image: postgres:14
-    restart: always
-    environment:
-      POSTGRES_USER: mappa
-      POSTGRES_PASSWORD: mappa
-      POSTGRES_DB: mappadb
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  pgadmin:
-    image: dpage/pgadmin4
-    restart: always
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@mappa.com
-      PGADMIN_DEFAULT_PASSWORD: mappa123
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - db
-
-volumes:
-  pgdata:
-  pgadmin_data:

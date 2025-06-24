@@ -8,17 +8,32 @@
     body { font-family: sans-serif; padding: 10px; }
     button { margin-top: 10px; margin-right: 10px; }
     pre { background: #f5f5f5; padding: 10px; overflow-x: auto; font-size: 13px; }
+    .controls { margin-bottom: 10px; }
+    label { margin-right: 10px; }
   </style>
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 </head>
 <body>
   <h2>Draw Route → Snap to Roads</h2>
+  <div class="controls">
+    <label>Shape:
+      <select id="shapeSelect">
+        <option value="square">Square</option>
+        <option value="triangle">Triangle</option>
+      </select>
+    </label>
+    <label>Distance:
+      <input type="range" id="distanceSlider" min="100" max="2000" step="100" value="1000" />
+      <span id="distanceValue">1000</span> meters
+    </label>
+  </div>
+  <div>
+    <button onclick="sendToSnap()">Snap This Route</button>
+    <button onclick="snapFromLocation()">Snap From Location + Shape</button>
+    <button onclick="reset()">Clear</button>
+  </div>
+
   <div id="map"></div>
-  <button onclick="sendToSnap()">Snap This Route</button>
-  <button onclick="reset()">Clear</button>
 
   <h3>Original Geometry</h3>
   <pre id="originalText">[]</pre>
@@ -28,7 +43,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([52.52, 13.405], 13);
+    const map = L.map('map').setView([25.276987, 55.296249], 14); // Dubai default
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -36,9 +51,17 @@
     let drawnCoords = [];
     let drawLayer = L.polyline([], { color: 'black' }).addTo(map);
     let snappedLayer = null;
+    let jwtToken = null;
 
     const originalText = document.getElementById("originalText");
     const snappedText = document.getElementById("snappedText");
+    const shapeSelect = document.getElementById("shapeSelect");
+    const distanceSlider = document.getElementById("distanceSlider");
+    const distanceValue = document.getElementById("distanceValue");
+
+    distanceSlider.oninput = () => {
+      distanceValue.textContent = distanceSlider.value;
+    };
 
     map.on('click', (e) => {
       const { lat, lng } = e.latlng;
@@ -47,22 +70,44 @@
       originalText.textContent = JSON.stringify(drawnCoords, null, 2);
     });
 
+    async function login() {
+      try {
+        const res = await fetch('https://mappa-e2yh.onrender.com/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'test3@example.com',
+            password: 'secret123'
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.msg || 'Login failed');
+        jwtToken = data.access_token;
+        console.log('Logged in, token acquired');
+      } catch (err) {
+        alert('Login error: ' + err.message);
+      }
+    }
+
     async function sendToSnap() {
+      if (!jwtToken) {
+        alert("Token missing. Login failed?");
+        return;
+      }
+
       if (drawnCoords.length < 2) {
         alert("Draw at least 2 points.");
         return;
       }
 
-      const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc1MDc4Mjg3OSwianRpIjoiMmE4YzQxNTAtOThlYS00MzE1LTk1ZGQtODJkNjVjZjUyZTY0IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6MywibmJmIjoxNzUwNzgyODc5LCJjc3JmIjoiMWI1N2ZkZWQtODY3MS00NjYwLWFhNDgtMmZjZDNlNTIxYjRlIiwiZXhwIjoxNzUwNzgzNzc5fQ.eIapRsVCntD65HY0DDDvpp4nbY2UKUUAlX7_R0spsbw'; // 🔑 Replace this with a valid token
-
       const geoCoords = drawnCoords.map(([lat, lng]) => [lng, lat]);
 
       try {
-        const res = await fetch('http://localhost:5055/shape', {
+        const res = await fetch('https://mappa-e2yh.onrender.com/map/shape', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
+            'Authorization': 'Bearer ' + jwtToken
           },
           body: JSON.stringify({
             geometry: geoCoords,
@@ -84,6 +129,46 @@
       }
     }
 
+    async function snapFromLocation() {
+      if (!jwtToken) {
+        alert("Token missing. Login failed?");
+        return;
+      }
+
+      const center = map.getCenter();
+      const shape = shapeSelect.value;
+      const distance = parseInt(distanceSlider.value, 10);
+
+      try {
+        const res = await fetch('https://mappa-e2yh.onrender.com/map/shape-from-location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + jwtToken
+          },
+          body: JSON.stringify({
+            start: [center.lat, center.lng],
+            shape,
+            distance,
+            mode: 'foot-walking'
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Snap from location failed');
+
+        const snapped = data.snapped.map(([lng, lat]) => [lat, lng]);
+        if (snappedLayer) map.removeLayer(snappedLayer);
+        snappedLayer = L.polyline(snapped, { color: 'blue' }).addTo(map);
+        map.fitBounds(snappedLayer.getBounds());
+
+        originalText.textContent = JSON.stringify(data.original_shape.map(([lng, lat]) => [lat, lng]), null, 2);
+        snappedText.textContent = JSON.stringify(snapped, null, 2);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
     function reset() {
       drawnCoords = [];
       drawLayer.setLatLngs([]);
@@ -94,6 +179,10 @@
       originalText.textContent = "[]";
       snappedText.textContent = "[]";
     }
+
+    window.onload = () => {
+      login();
+    };
   </script>
 </body>
 </html>

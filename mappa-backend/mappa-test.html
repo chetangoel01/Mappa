@@ -72,7 +72,7 @@
 
     async function login() {
       try {
-        const res = await fetch('https://mappa-e2yh.onrender.com/auth/login', {
+        const res = await fetch('https://4d26-2603-7000-2df0-78f0-d553-ee2d-9f87-c657.ngrok-free.app/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -103,7 +103,7 @@
       const geoCoords = drawnCoords.map(([lat, lng]) => [lng, lat]);
 
       try {
-        const res = await fetch('https://mappa-e2yh.onrender.com/map/shape', {
+        const res = await fetch('https://4d26-2603-7000-2df0-78f0-d553-ee2d-9f87-c657.ngrok-free.app/map/shape', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -140,7 +140,7 @@
       const distance = parseInt(distanceSlider.value, 10);
 
       try {
-        const res = await fetch('https://mappa-e2yh.onrender.com/map/shape-from-location', {
+        const res = await fetch('https://4d26-2603-7000-2df0-78f0-d553-ee2d-9f87-c657.ngrok-free.app/map/shape-from-location', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

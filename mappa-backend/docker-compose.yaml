@@ -1,12 +1,12 @@
-services:
-  web:
-    build:
-      context: .
-    ports:
-      - "5055:5000"
-    environment:
-      DATABASE_URL: postgresql://postgres:***REMOVED***@db.ijkwprygjsbokfkclciv.supabase.co:5432/postgres
-      JWT_SECRET_KEY: ***REMOVED***
-    volumes:
-      - .:/app
-    command: flask run --host=0.0.0.0 --reload
+  services:
+    web:
+      build:
+        context: .
+      ports:
+        - "5055:5000"
+      environment:
+        DATABASE_URL: postgresql://postgres:***REMOVED***@db.ijkwprygjsbokfkclciv.supabase.co:5432/postgres
+        JWT_SECRET_KEY: ***REMOVED***
+      volumes:
+        - .:/app
+      command: flask run --host=0.0.0.0 --reload

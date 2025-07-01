@@ -34,7 +34,7 @@ def create_app():
     from .mapping.routes import mapping_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(user_bp, url_prefix='/user')
+    app.register_blueprint(user_bp, url_prefix='/users')
     app.register_blueprint(gps_bp, url_prefix='/gps')
     app.register_blueprint(mapping_bp, url_prefix='/map')
 

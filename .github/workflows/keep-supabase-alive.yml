@@ -1,0 +1,16 @@
+name: Keep Supabase Alive (Health Check)
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours (UTC)
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            https://ijkwprygjsbokfkclciv.supabase.co/rest/v1/dummy

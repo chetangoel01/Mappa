@@ -9,4 +9,4 @@ COPY . .
 
 ENV FLASK_ENV=development
 
-CMD ["flask", "run", "--host=0.0.0.0", "--reload"]
+CMD ["flask", "run", "--host=0.0.0.0:5000", "--reload"]

@@ -44,6 +44,10 @@ flask run
 Or with Docker:
 ```bash
 cd mappa-backend
+
+# Copy .env.example and fill in your credentials
+cp .env.example .env
+
 docker-compose up
 ```
 
@@ -93,3 +97,12 @@ Mappa/
 - 🌓 Dark/Light theme support
 - 📤 Export routes to Google Maps or Apple Maps
 - ⏱️ Auto-save functionality
+
+## TODO
+
+- [ ] Add unit tests for backend API endpoints
+- [ ] Add integration tests for frontend
+- [ ] Implement route sharing between users
+- [ ] Add offline map support
+- [ ] Implement route statistics (elevation, pace, etc.)
+- [ ] Add social features (follow users, like routes)

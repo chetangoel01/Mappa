@@ -10,7 +10,7 @@ A mobile app for creating and saving walking/running routes with snap-to-roads f
 - **Supabase** - Database (PostgreSQL)
 - **OpenRouteService** - Route snapping API
 
-### Frontend (`my-app/`)
+### Frontend (`mappa-frontend/`)
 - **React Native** with Expo
 - **TypeScript**
 - **Zustand** - State management
@@ -54,7 +54,7 @@ docker-compose up
 ### Frontend Setup
 
 ```bash
-cd my-app
+cd mappa-frontend
 
 # Install dependencies
 npm install
@@ -77,7 +77,7 @@ Mappa/
 │   ├── requirements.txt
 │   └── Dockerfile
 │
-└── my-app/
+└── mappa-frontend/
     ├── src/
     │   ├── components/    # Reusable UI components
     │   ├── screens/       # App screens
@@ -100,7 +100,7 @@ Mappa/
 
 ## TODO
 
-- [ ] Implement image upload to cloud storage (`my-app/src/services/imageService.ts`)
-- [ ] Implement image deletion from cloud storage (`my-app/src/services/imageService.ts`)
-- [ ] Send imported routes to backend API (`my-app/src/screens/ProfileScreen.tsx`)
-- [ ] Sync settings to server (`my-app/src/store/settingsStore.ts`)
+- [ ] Implement image upload to cloud storage (`mappa-frontend/src/services/imageService.ts`)
+- [ ] Implement image deletion from cloud storage (`mappa-frontend/src/services/imageService.ts`)
+- [ ] Send imported routes to backend API (`mappa-frontend/src/screens/ProfileScreen.tsx`)
+- [ ] Sync settings to server (`mappa-frontend/src/store/settingsStore.ts`)

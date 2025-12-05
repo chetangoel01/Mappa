@@ -100,9 +100,7 @@ Mappa/
 
 ## TODO
 
-- [ ] Add unit tests for backend API endpoints
-- [ ] Add integration tests for frontend
-- [ ] Implement route sharing between users
-- [ ] Add offline map support
-- [ ] Implement route statistics (elevation, pace, etc.)
-- [ ] Add social features (follow users, like routes)
+- [ ] Implement image upload to cloud storage (`my-app/src/services/imageService.ts`)
+- [ ] Implement image deletion from cloud storage (`my-app/src/services/imageService.ts`)
+- [ ] Send imported routes to backend API (`my-app/src/screens/ProfileScreen.tsx`)
+- [ ] Sync settings to server (`my-app/src/store/settingsStore.ts`)

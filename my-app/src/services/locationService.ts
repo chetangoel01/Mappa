@@ -19,7 +19,6 @@ class LocationService {
       const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync()
       
       if (foregroundStatus !== 'granted') {
-        console.log('Foreground location permission denied')
         return false
       }
 
@@ -79,8 +78,6 @@ class LocationService {
           )
         }
       }
-
-      console.log('Location tracking started')
     } catch (error) {
       console.error('Failed to start location tracking:', error)
     }
@@ -97,42 +94,18 @@ class LocationService {
         await this.backgroundLocationSubscription.remove()
         this.backgroundLocationSubscription = null
       }
-
-      console.log('Location tracking stopped')
     } catch (error) {
       console.error('Failed to stop location tracking:', error)
     }
   }
 
-  private handleLocationUpdate(location: Location.LocationObject) {
+  private handleLocationUpdate(_location: Location.LocationObject) {
     // Handle foreground location updates
-    console.log('Foreground location update:', {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      accuracy: location.coords.accuracy,
-      timestamp: new Date(location.timestamp).toISOString()
-    })
-
-    // Here you can add logic to:
-    // - Update current route if drawing
-    // - Save location to local storage
-    // - Send to backend if needed
-    // - Trigger route auto-save if enabled
+    // Can be extended to update current route, save to storage, or send to backend
   }
 
-  private handleBackgroundLocationUpdate(location: Location.LocationObject) {
-    // Handle background location updates
-    console.log('Background location update:', {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      accuracy: location.coords.accuracy,
-      timestamp: new Date(location.timestamp).toISOString()
-    })
-
-    // Background location updates are typically used for:
-    // - Route recording when app is in background
-    // - Geofencing
-    // - Location-based reminders
+  private handleBackgroundLocationUpdate(_location: Location.LocationObject) {
+    // Handle background location updates for route recording when app is in background
   }
 
   async getCurrentLocation(): Promise<Location.LocationObject | null> {

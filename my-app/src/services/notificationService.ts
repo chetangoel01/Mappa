@@ -35,19 +35,14 @@ class NotificationService {
       }
 
       if (finalStatus !== 'granted') {
-        console.log('Failed to get push token for push notification!')
         return false
       }
 
-      // Get push token
       if (Device.isDevice) {
         const token = await Notifications.getExpoPushTokenAsync({
-          projectId: 'your-project-id', // Replace with your Expo project ID
+          projectId: 'your-project-id',
         })
         this.expoPushToken = token.data
-        console.log('Expo push token:', token.data)
-      } else {
-        console.log('Must use physical device for Push Notifications')
       }
 
       // Set up notification channels for Android

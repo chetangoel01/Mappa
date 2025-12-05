@@ -60,12 +60,9 @@ export default function RoutesScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              console.log('RoutesScreen: Deleting route:', route.id)
               await deleteRoute(route.id)
-              console.log('RoutesScreen: Route deleted successfully')
-              await fetchRoutes() // Refresh the list
+              await fetchRoutes()
             } catch (error: any) {
-              console.error('RoutesScreen: Error deleting route:', error)
               Alert.alert("Error", `Failed to delete route: ${error.message || 'Unknown error'}`)
             }
           }
@@ -84,15 +81,12 @@ export default function RoutesScreen() {
     if (!editingRoute || !editName.trim()) return
 
     try {
-      console.log('Updating route:', editingRoute.id, 'with name:', editName.trim())
       await updateRoute(editingRoute.id, { name: editName.trim() })
-      console.log('Route updated successfully')
       setShowEditModal(false)
       setEditingRoute(null)
       setEditName("")
-      await fetchRoutes() // Refresh the list
+      await fetchRoutes()
     } catch (error: any) {
-      console.error('Error updating route:', error)
       Alert.alert("Error", `Failed to update route: ${error.message || 'Unknown error'}`)
     }
   }

@@ -17,38 +17,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   token: null,
   user: null,
 
-  // Logs in a user via /login
-  // Request: { email, password }
-  // Response: { access_token }
   login: async (email: string, password: string) => {
-    console.log("[AuthStore] Attempting login", { email });
     try {
       const response = await apiClient.post("/auth/login", { email, password })
-      console.log("API response data:", response.data);
-      const token = response.data.access_token;
-      // const user = response.data.user;
-      console.log("Token to be saved:", token);
-      // console.log("User to be saved:", user);
+      const token = response.data.access_token
 
       await AsyncStorage.setItem("auth_token", token)
       await AsyncStorage.setItem("user_data", JSON.stringify(email))
-      console.log("[AuthStore] Token and user data saved to AsyncStorage");
 
       set({ isAuthenticated: true, token, user: email })
-      console.log("[AuthStore] Auth state updated", { isAuthenticated: true, token, user: email });
       return true
     } catch (error: any) {
-      console.error("[AuthStore] Login failed:", error)
-      if (error.response) {
-        console.error("[AuthStore] Error response:", error.response.data);
-      }
+      console.error("Login failed:", error)
       return false
     }
   },
 
-  // Registers a user via /register
-  // Request: { email, password, name }
-  // Response: { access_token }
   register: async (email: string, password: string, name: string) => {
     try {
       const response = await apiClient.post("/auth/register", { email, password, name })
@@ -58,10 +42,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isAuthenticated: true, token, user: email })
       return true
     } catch (error: any) {
-      console.error("[AuthStore] Registration failed:", error)
-      if (error.response) {
-        console.error("[AuthStore] Error response:", error.response.data)
-      }
+      console.error("Registration failed:", error)
       return false
     }
   },

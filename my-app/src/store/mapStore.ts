@@ -70,8 +70,6 @@ export const useMapStore = create<MapState>((set, get) => ({
         geometry,
       })
 
-      console.log("Snapped route response:", response.data)
-
       // Handle the response - backend returns coordinates as [longitude, latitude] arrays
       let snappedCoordinates = []
 
@@ -86,16 +84,12 @@ export const useMapStore = create<MapState>((set, get) => ({
         snappedCoordinates = response.data.coordinates
       }
 
-      console.log("Processed snapped coordinates:", snappedCoordinates.slice(0, 5)) // Log first 5 for debugging
-      
-      // Store the export URL from the backend response
       const exportUrl = response.data.export_url || null
       
       set({ snappedRoute: snappedCoordinates, exportUrl })
-      return undefined // No shape_id since we're not saving to database
+      return undefined
     } catch (error) {
       console.error("Failed to snap route:", error)
-      // TODO: Show error message to user
     } finally {
       set({ isLoading: false })
     }
@@ -116,8 +110,6 @@ export const useMapStore = create<MapState>((set, get) => ({
         name: name || `Route ${new Date().toLocaleDateString()}`,
       })
 
-      console.log("Submit shape response:", response.data)
-
       // Handle the response - backend returns coordinates as [longitude, latitude] arrays
       let snappedCoordinates = []
 
@@ -132,16 +124,12 @@ export const useMapStore = create<MapState>((set, get) => ({
         snappedCoordinates = response.data.coordinates
       }
 
-      console.log("Processed snapped coordinates:", snappedCoordinates.slice(0, 5)) // Log first 5 for debugging
-      
-      // Store the export URL from the backend response
       const exportUrl = response.data.export_url || null
       
       set({ snappedRoute: snappedCoordinates, exportUrl })
       return response.data.shape_id || response.data.id
     } catch (error) {
       console.error("Failed to submit shape:", error)
-      // TODO: Show error message to user
     } finally {
       set({ isLoading: false })
     }
@@ -168,13 +156,11 @@ export const useMapStore = create<MapState>((set, get) => ({
         })),
         mode: s.mode || 'walking',
         exportUrl: s.export_url,
-        directions: s.directions || [], // ORS directions added - include directions in routes list
-        // Add more fields if needed
+        directions: s.directions || [],
       }))
       set({ routes })
     } catch (error) {
       console.error("Failed to fetch routes:", error)
-      // TODO: Show error message to user
     } finally {
       set({ isLoading: false })
     }
@@ -201,7 +187,7 @@ export const useMapStore = create<MapState>((set, get) => ({
         mode: routeData.mode,
         user_id: routeData.user_id,
         exportUrl: routeData.export_url,
-        directions: routeData.directions || [], // ORS directions added - include directions in response
+        directions: routeData.directions || [],
       }
 
       return processedData
@@ -217,41 +203,31 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   deleteRoute: async (routeId: string) => {
     try {
-      console.log('mapStore: Deleting route with ID:', routeId)
       const response = await apiClient.delete(`/map/shapes/${routeId}`)
-      
-      console.log('mapStore: Delete API response:', response.data)
       
       if (response.status !== 200) {
         throw new Error('Failed to delete route')
       }
       
-      // Update local state by removing the deleted route
       set((state) => ({
         routes: state.routes.filter(route => route.id !== routeId)
       }))
       
-      console.log('mapStore: Route deleted from local state successfully')
       return true
     } catch (error) {
-      console.error('mapStore: Error deleting route:', error)
+      console.error('Error deleting route:', error)
       throw error
     }
   },
 
   updateRoute: async (routeId: string, updates: { name?: string; mode?: string }) => {
     try {
-      console.log('mapStore: Updating route with ID:', routeId, 'updates:', updates)
-      // Use PATCH endpoint for name/mode updates
       const response = await apiClient.patch(`/map/shapes/${routeId}`, updates)
-      
-      console.log('mapStore: API response:', response.data)
       
       if (response.status !== 200) {
         throw new Error('Failed to update route')
       }
       
-      // Update local state with the new data
       set((state) => ({
         routes: state.routes.map(route => 
           route.id === routeId ? { 
@@ -262,10 +238,9 @@ export const useMapStore = create<MapState>((set, get) => ({
         )
       }))
       
-      console.log('mapStore: Local state updated successfully')
       return response.data
     } catch (error) {
-      console.error('mapStore: Error updating route:', error)
+      console.error('Error updating route:', error)
       throw error
     }
   },
@@ -287,12 +262,9 @@ export const useMapStore = create<MapState>((set, get) => ({
         name,
       })
 
-      console.log("Save snapped route response:", response.data)
-
       return response.data.shape_id || response.data.id
     } catch (error) {
       console.error("Failed to save snapped route:", error)
-      // TODO: Show error message to user
     } finally {
       set({ isLoading: false })
     }

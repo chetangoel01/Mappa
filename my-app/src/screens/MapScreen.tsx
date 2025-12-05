@@ -44,22 +44,17 @@ export default function MapScreen() {
   const navigation = useNavigation()
   const [showMapTypeSelector, setShowMapTypeSelector] = useState(false)
 
-  console.log("MapScreen render - isDrawing:", isDrawing, "currentShape length:", currentShape.length, "snappedRoute length:", snappedRoute.length)
-
   useEffect(() => {
     (async () => {
-      console.log("Initializing location and region...")
       const savedRegion = await AsyncStorage.getItem(REGION_KEY)
       if (savedRegion) {
         const parsed = JSON.parse(savedRegion)
-        console.log("Loaded saved region:", parsed)
         setRegion(parsed)
         setUserLocation({ latitude: parsed.latitude, longitude: parsed.longitude })
         return
       }
       
       let { status } = await Location.requestForegroundPermissionsAsync()
-      console.log("Location permission status:", status)
       
       if (status === "granted") {
         let lastKnown = await Location.getLastKnownPositionAsync()
@@ -68,7 +63,6 @@ export default function MapScreen() {
             latitude: lastKnown.coords.latitude,
             longitude: lastKnown.coords.longitude,
           }
-          console.log("Got last known location:", userLoc)
           setUserLocation(userLoc)
           setRegion({ ...userLoc, latitudeDelta: 0.01, longitudeDelta: 0.01 })
         }
@@ -79,21 +73,18 @@ export default function MapScreen() {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
           }
-          console.log("Got current location:", userLoc)
           setUserLocation(userLoc)
           setRegion({ ...userLoc, latitudeDelta: 0.01, longitudeDelta: 0.01 })
         } catch (error) {
-          console.log("Error getting current location:", error)
+          // Fall back to last known location if current location fails
         }
         return
       }
       
       try {
-        console.log("Trying IP-based location...")
         const res = await fetch("https://ipapi.co/json/")
         const data = await res.json()
         if (data && data.latitude && data.longitude) {
-          console.log("Got IP location:", data.latitude, data.longitude)
           setRegion({
             latitude: data.latitude,
             longitude: data.longitude,
@@ -102,7 +93,7 @@ export default function MapScreen() {
           })
         }
       } catch (error) {
-        console.log("Error getting IP location:", error)
+        // Fall back to default region if IP location fails
       }
     })()
   }, [])
@@ -114,7 +105,6 @@ export default function MapScreen() {
   // Force rerender when snappedRoute changes to fix rendering delay
   useEffect(() => {
     if (snappedRoute.length > 0) {
-      console.log("Snapped route updated, forcing rerender")
       setForceRerender(prev => prev + 1)
     }
   }, [snappedRoute])
@@ -138,17 +128,13 @@ export default function MapScreen() {
   }, [settings.locationTracking, settings.autoSave])
 
   const handleMapPress = useCallback((event: any) => {
-    console.log("Map press event - isDrawing:", isDrawing)
     if (!isDrawing) return
     const { coordinate } = event.nativeEvent
-    console.log("Adding coordinate:", coordinate)
     addCoordinate(coordinate)
-    // Add haptic feedback
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      console.log("Haptic feedback triggered")
     } catch (error) {
-      console.log("Haptic feedback error:", error)
+      // Haptic feedback not available
     }
   }, [isDrawing, addCoordinate])
 
@@ -262,11 +248,7 @@ export default function MapScreen() {
     }
 
     try {
-      const result = await snapShape()
-      if (result !== undefined) {
-        // Route has been snapped successfully, now the user can save it with a name
-        console.log("Route snapped successfully, ready for save/share options")
-      }
+      await snapShape()
     } catch (error) {
       console.error("Failed to snap route:", error)
       Alert.alert("Error", "Failed to process route. Please try again.")
@@ -285,14 +267,12 @@ export default function MapScreen() {
   }
 
   const handleClearShape = () => {
-    console.log("Clearing shape")
     clearShape()
     setDrawingMode(false)
   }
 
   const handleLocateMe = async () => {
     try {
-      console.log("Locating user...")
       setIsLocating(true)
       
       let { status } = await Location.requestForegroundPermissionsAsync()
@@ -310,7 +290,6 @@ export default function MapScreen() {
             latitude: lastKnown.coords.latitude,
             longitude: lastKnown.coords.longitude,
           }
-          console.log("Using last known location:", userLoc)
           setUserLocation(userLoc)
           
           if (mapRef.current) {
@@ -324,23 +303,22 @@ export default function MapScreen() {
           
           // Continue to get current location in background for accuracy
           Location.getCurrentPositionAsync({ 
-            accuracy: Location.Accuracy.Balanced // Use balanced instead of high for speed
+            accuracy: Location.Accuracy.Balanced
           }).then(location => {
             const currentUserLoc = {
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
             }
-            console.log("Updated to current location:", currentUserLoc)
             setUserLocation(currentUserLoc)
-          }).catch(error => {
-            console.log("Background location update failed:", error)
+          }).catch(() => {
+            // Background location update failed, use last known
           })
           
           setIsLocating(false)
           return
         }
       } catch (error) {
-        console.log("No last known location:", error)
+        // No last known location, continue to get current
       }
       
       // If no last known location, get current location with timeout
@@ -353,7 +331,6 @@ export default function MapScreen() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         }
-        console.log("Located user at:", userLoc)
         setUserLocation(userLoc)
         
         if (mapRef.current) {
@@ -365,11 +342,9 @@ export default function MapScreen() {
           }, 1000)
         }
       } catch (locationError) {
-        console.log("Error getting current location:", locationError)
         Alert.alert("Location Error", "Could not fetch your current location. Please try again or check your location settings.")
       }
     } catch (error) {
-      console.log("Error locating user:", error)
       Alert.alert("Error", "Could not fetch your location.")
     } finally {
       setIsLocating(false)
@@ -377,7 +352,6 @@ export default function MapScreen() {
   }
 
   const handleSetDrawingMode = (drawing: boolean) => {
-    console.log("Setting drawing mode:", drawing)
     setDrawingMode(drawing)
     
     // Start/stop auto-save based on drawing mode
@@ -389,7 +363,6 @@ export default function MapScreen() {
   }
 
   const handleUndoLastPoint = () => {
-    console.log("Undoing last waypoint")
     if (currentShape.length > 0) {
       const newShape = currentShape.slice(0, -1)
       clearShape()
@@ -398,7 +371,7 @@ export default function MapScreen() {
       try {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       } catch (error) {
-        console.log("Haptic feedback error:", error)
+        // Haptic feedback not available
       }
     }
   }
@@ -420,12 +393,10 @@ export default function MapScreen() {
 
   const handleMapLayout = useCallback((event: any) => {
     const { width, height } = event.nativeEvent.layout
-    console.log("Map layout changed:", { width, height })
     setMapLayout({ width, height })
   }, [])
 
   const handleRegionChange = useCallback((newRegion: any) => {
-    console.log("Region changed:", newRegion)
     setRegion(newRegion)
   }, [])
 
@@ -623,7 +594,6 @@ export default function MapScreen() {
           <TouchableOpacity
             style={[styles.fabButton, styles.clearButton]}
             onPress={() => {
-              console.log("Remove/Clear route")
               clearShape()
               setDrawingMode(false)
             }}

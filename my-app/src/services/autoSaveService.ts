@@ -32,8 +32,6 @@ class AutoSaveService {
     this.intervalId = setInterval(async () => {
       await this.performAutoSave()
     }, intervalMs)
-
-    console.log(`Auto-save started with ${settings.interval} minute interval`)
   }
 
   async stopAutoSave() {
@@ -42,7 +40,6 @@ class AutoSaveService {
       this.intervalId = null
     }
     this.isActive = false
-    console.log('Auto-save stopped')
   }
 
   private async performAutoSave() {
@@ -67,10 +64,7 @@ class AutoSaveService {
       const autoSaveKey = `@mappa_auto_save_${Date.now()}`
       await AsyncStorage.setItem(autoSaveKey, JSON.stringify(autoSaveData))
 
-      // Keep only the last 5 auto-saves
       await this.cleanupOldAutoSaves()
-
-      console.log('Auto-save completed:', autoSaveData.routeName)
     } catch (error) {
       console.error('Auto-save failed:', error)
     }
@@ -84,10 +78,8 @@ class AutoSaveService {
       if (autoSaveKeys.length > 5) {
         // Sort by timestamp (newest first)
         const sortedKeys = autoSaveKeys.sort().reverse()
-        const keysToDelete = sortedKeys.slice(5) // Keep only the 5 most recent
-        
+        const keysToDelete = sortedKeys.slice(5)
         await AsyncStorage.multiRemove(keysToDelete)
-        console.log(`Cleaned up ${keysToDelete.length} old auto-saves`)
       }
     } catch (error) {
       console.error('Failed to cleanup old auto-saves:', error)
@@ -155,7 +147,6 @@ class AutoSaveService {
       const keys = await AsyncStorage.getAllKeys()
       const autoSaveKeys = keys.filter(key => key.startsWith('@mappa_auto_save_'))
       await AsyncStorage.multiRemove(autoSaveKeys)
-      console.log('All auto-saves cleared')
     } catch (error) {
       console.error('Failed to clear auto-saves:', error)
     }

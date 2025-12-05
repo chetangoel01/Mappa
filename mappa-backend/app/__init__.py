@@ -6,9 +6,6 @@ from config import Config
 from flask_cors import CORS
 from supabase import create_client, Client
 
-# Remove SQLAlchemy
-# db = SQLAlchemy()
-
 jwt = JWTManager()
 bcrypt = Bcrypt()
 
@@ -25,7 +22,13 @@ def create_app():
 
     jwt.init_app(app)
     bcrypt.init_app(app)
-    CORS(app, supports_credentials=True)
+    
+    CORS(app, 
+         supports_credentials=True,
+         origins=["*"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization", "X-Requested-With"])
+    
     app.config["JWT_VERIFY_SUB"] = False
 
     from .auth.routes import auth_bp

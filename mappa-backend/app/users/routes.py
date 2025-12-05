@@ -96,9 +96,8 @@ def delete_account():
         # Delete user's routes/shapes first (if they exist)
         try:
             supabase.table('Shape').delete().eq('user_id', user_id).execute()
-        except Exception as e:
-            # If Shape table doesn't exist or other error, continue
-            print(f"Warning: Could not delete shapes for user {user_id}: {e}")
+        except Exception:
+            pass  # Shape table may not exist
         
         # Delete the user account
         supabase.table('User').delete().eq('id', user_id).execute()

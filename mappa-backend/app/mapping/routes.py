@@ -81,7 +81,6 @@ def generate_google_maps_url(snapped_route):
 @jwt_required()
 def map_shape():
     """Save a route to database (assumes route is already snapped)"""
-    print("DEBUG: /shape endpoint called - SAVING TO DATABASE ONLY")
     try:
         data = request.get_json()
         user_id = get_jwt_identity()
@@ -112,7 +111,6 @@ def map_shape():
         try:
             res = supabase.table('ShapeRoute').insert(shape).execute()
             shape_id = res.data[0]['id'] if res.data else None
-            print(f"DEBUG: /shape endpoint - saved route to DB with ID: {shape_id}, name: {name}")
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -128,7 +126,6 @@ def map_shape():
         }), 200
 
     except Exception as e:
-        print(f"DEBUG: /shape endpoint error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -136,7 +133,6 @@ def map_shape():
 @jwt_required()
 def snap_and_save_shape():
     """Snap route and save to database in one operation"""
-    print("DEBUG: /snap-and-save endpoint called - SNAPPING AND SAVING")
     try:
         data = request.get_json()
         user_id = get_jwt_identity()
@@ -161,7 +157,6 @@ def snap_and_save_shape():
         try:
             res = supabase.table('ShapeRoute').insert(shape).execute()
             shape_id = res.data[0]['id'] if res.data else None
-            print(f"DEBUG: /snap-and-save endpoint - saved route to DB with ID: {shape_id}, name: {name}")
         except Exception as e:
             return jsonify({"error": str(e)}), 500
 
@@ -177,7 +172,6 @@ def snap_and_save_shape():
         }), 200
 
     except Exception as e:
-        print(f"DEBUG: /snap-and-save endpoint error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -188,7 +182,6 @@ def get_shapes():
         user_id = get_jwt_identity()
         try:
             res = supabase.table('ShapeRoute').select('*').eq('user_id', user_id).execute()
-            print(f"Supabase query result: {res.data}")
         except Exception as e:
             return jsonify({"error": str(e)}), 500
         shapes = res.data
@@ -280,9 +273,6 @@ def patch_shape(shape_id):
         data = request.get_json()
         user_id = get_jwt_identity()
         
-        print(f"PATCH request for shape {shape_id} by user {user_id}")
-        print(f"Request data: {data}")
-        
         # Only allow updating specific fields that don't require re-snapping
         allowed_updates = {}
         if 'name' in data:
@@ -293,18 +283,13 @@ def patch_shape(shape_id):
         if not allowed_updates:
             return jsonify({"error": "No valid fields to update"}), 400
 
-        print(f"Allowed updates: {allowed_updates}")
-
         try:
-            result = supabase.table('ShapeRoute').update(allowed_updates).eq('id', shape_id).eq('user_id', user_id).execute()
-            print(f"Supabase update result: {result}")
+            supabase.table('ShapeRoute').update(allowed_updates).eq('id', shape_id).eq('user_id', user_id).execute()
         except Exception as e:
-            print(f"Supabase error: {e}")
             return jsonify({"error": str(e)}), 500
 
         return jsonify({"msg": "Route updated successfully", "updated_fields": allowed_updates}), 200
     except Exception as e:
-        print(f"PATCH endpoint error: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -327,7 +312,6 @@ def delete_shape(shape_id):
 @jwt_required()
 def snap_route():
     """Snap route without saving to database - returns snapped route and directions only"""
-    print("DEBUG: /snap endpoint called - SNAPPING ONLY, NOT SAVING")
     try:
         data = request.get_json()
         mode = data.get('mode', 'foot-walking')
@@ -341,7 +325,6 @@ def snap_route():
 
         export_url = generate_google_maps_url(snapped)
 
-        print("DEBUG: /snap endpoint - returning snapped route without saving to DB")
         return jsonify({
             "msg": "Route snapped successfully",
             "snapped": snapped,
@@ -350,5 +333,4 @@ def snap_route():
         }), 200
 
     except Exception as e:
-        print(f"DEBUG: /snap endpoint error: {e}")
         return jsonify({"error": str(e)}), 500

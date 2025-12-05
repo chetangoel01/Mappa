@@ -1,12 +1,14 @@
-  services:
-    web:
-      build:
-        context: .
-      ports:
-        - "5055:5000"
-      environment:
-        DATABASE_URL: postgresql://postgres:***REMOVED***@db.ijkwprygjsbokfkclciv.supabase.co:5432/postgres
-        JWT_SECRET_KEY: ***REMOVED***
-      volumes:
-        - .:/app
-      command: flask run --host=0.0.0.0 --reload
+services:
+  web:
+    build:
+      context: .
+    ports:
+      - "5055:5000"
+    environment:
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      ORS_API_KEY: ${ORS_API_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    volumes:
+      - .:/app
+    command: flask run --host=0.0.0.0 --reload
